@@ -38,12 +38,37 @@
                 return  user;
             };
 
-            const Nav = () => {
+            class Create extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        item: ''
+                    };
+                    this.create = this.create.bind(this);
+                }
+                create() {
+                    this.props.onCreate(this.state.item)
+                    this.props.history('/notes/create')
+                }
+                render() {
+                    const { item } = this.state;
+                    const { create } = this;
+                    return (
+                        <form onSubmit={ev=> ev.preventDefault()}>
+                            <input name='item' value={ item } onChange={ev=> this.setState({item: ev.target.value})}/>
+                            <button disabled={ !item } onClick={ create }>Create</button>
+                        </form>
+                    )
+                }
+            }
+
+            const Nav = ({ notes }) => {
+                const archived = notes.filter( note => note.status === 'archived');
                 return (
                     <nav>
                     <NavLink to='/notes'>Notes(0)</NavLink>
-                    <NavLink to='/archived'>Archived(0)</NavLink>
-                    <NavLink to='/create'>Create</NavLink>
+                    <NavLink to='/notes/archived'>Archived(0)</NavLink>
+                    <NavLink to='/notes/create'>Create</NavLink>
                     </nav>
                 )
             }
@@ -54,12 +79,26 @@
                     this.state = {
                         notes: []
                     }
+                    this.onCreate = this.onCreate.bind(this)
+                }
+                onCreate(item) {
+                    const notes = [...this.state.orders, { id: Math.random(), item, status: 'archived'}]
+                    this.setState({ notes })
+                }
+                async componentDidMount() {
+                    const user = await fetchUser();
+                    const notes = (await axios( `${API}/notes`)).data
+                    console.log(notes)
                 }
                 render() {
                     const { notes } = this.state;
+                    const { onCreate } = this;
                     return(
                         <HashRouter>
                             <Route render = { ()=> <Nav notes={ notes }/>}/>
+                            <Switch>
+                            <Route path='/notes/create' render={()=> <Create onCreate={ onCreate }/>}/>
+                            </Switch>
                         </HashRouter>
                     )
                 }
