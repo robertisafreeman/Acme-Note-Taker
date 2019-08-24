@@ -5,6 +5,12 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
             <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.1/react-router-dom.js"></script>
+            <style>
+                nav{
+                    display: flex;
+                    justify-content: space-around;
+                }
+            </style>
     </head>
     <body>
         <div id='root'></div>
@@ -13,9 +19,54 @@
             const { Component } = React;
             const { HashRouter, Route, NavLink, Switch, Redirect } = ReactRouterDOM;
             const root = document.querySelector('#root')
+            const API = 'https://acme-users-api-rev.herokuapp.com/api';
+
+            const fetchUser = async ()=> {
+                const storage = window.localStorage;
+                const userId = storage.getItem('userId'); 
+                if(userId){
+                    try {
+                        return (await axios.get(`${API}/users/detail/${userId}`)).data;
+                    }
+                    catch(ex){
+                        storage.removeItem('userId');
+                        return fetchUser();
+                    }
+                }
+                const user = (await axios.get(`${API}/users/random`)).data;
+                storage.setItem('userId', user.id);
+                return  user;
+            };
+
+            const Nav = () => {
+                return (
+                    <nav>
+                    <NavLink to='/notes'>Notes(0)</NavLink>
+                    <NavLink to='/archived'>Archived(0)</NavLink>
+                    <NavLink to='/create'>Create</NavLink>
+                    </nav>
+                )
+            }
+
+            class App extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        notes: []
+                    }
+                }
+                render() {
+                    const { notes } = this.state;
+                    return(
+                        <HashRouter>
+                            <Route render = { ()=> <Nav notes={ notes }/>}/>
+                        </HashRouter>
+                    )
+                }
+            }
 
 
-            render(<hr />, root)
+            render(<App />, root)
         </script>
     </body>
 </html>
