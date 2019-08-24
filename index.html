@@ -46,9 +46,8 @@
                     };
                     this.create = this.create.bind(this);
                 }
-                create() {
-                    this.props.onCreate(this.state.item)
-                    this.props.history('/notes/create')
+                create({notes}) {
+                    
                 }
                 render() {
                     const { item } = this.state;
@@ -72,6 +71,14 @@
                     </nav>
                 )
             }
+            const theNotes = ({user, notes, archived}) => {
+                return(
+                    <li>
+                    {user.name}
+                    </li>
+
+                )
+            }
 
             class App extends Component {
                 constructor() {
@@ -82,13 +89,14 @@
                     this.onCreate = this.onCreate.bind(this)
                 }
                 onCreate(item) {
-                    const notes = [...this.state.orders, { id: Math.random(), item, status: 'archived'}]
+                    const notes = [...this.state.notes, { id: Math.random(), item, status: 'archived'}]
                     this.setState({ notes })
                 }
                 async componentDidMount() {
                     const user = await fetchUser();
-                    const notes = (await axios( `${API}/notes`)).data
+                    const notes = (await axios( `${API}/users/${user.id}/notes`)).data
                     console.log(notes)
+                    this.setState({ user, notes })
                 }
                 render() {
                     const { notes } = this.state;
@@ -97,7 +105,7 @@
                         <HashRouter>
                             <Route render = { ()=> <Nav notes={ notes }/>}/>
                             <Switch>
-                            <Route path='/notes/create' render={()=> <Create onCreate={ onCreate }/>}/>
+                            <Route path='/notes/create' render={()=> <Create  onCreate={ onCreate }/>}/>
                             </Switch>
                         </HashRouter>
                     )
